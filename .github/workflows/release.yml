@@ -1,0 +1,58 @@
+name: Publish release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.13"
+      - name: Verify tag matches VERSION and current main
+        run: |
+          version=$(tr -d '[:space:]' < VERSION)
+          test "$GITHUB_REF_NAME" = "v$version"
+          git fetch --no-tags --depth=1 origin refs/heads/main:refs/remotes/origin/main
+          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+      - name: Parse scripts and validate template
+        run: |
+          bash -n bootstrap.sh install.sh scripts/package_release.sh tests/*.sh
+          python3 scripts/validate_vault.py template
+      - name: Run tests
+        run: |
+          python3 -m unittest discover -s tests -v
+          bash tests/test_installer.sh
+          bash tests/test_release.sh
+      - name: Build release payload with the protected signing key
+        env:
+          WIKI_INSTALLER_SIGNING_KEY: ${{ secrets.WIKI_INSTALLER_SIGNING_KEY }}
+        run: |
+          test -n "$WIKI_INSTALLER_SIGNING_KEY" || { echo "WIKI_INSTALLER_SIGNING_KEY is required" >&2; exit 1; }
+          signing_key="$RUNNER_TEMP/wiki-installer-release-private.pem"
+          umask 077
+          printf '%s' "$WIKI_INSTALLER_SIGNING_KEY" > "$signing_key"
+          openssl pkey -in "$signing_key" -noout -check
+          bash scripts/package_release.sh \
+            --output dist \
+            --signing-key "$signing_key" \
+            --public-key keys/release-public-key.pem
+          rm -f "$signing_key"
+      - name: Publish checked release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/wiki-installer-*.tar.gz \
+            dist/release-manifest.json \
+            dist/release-manifest.json.sig \
+            dist/bootstrap.sh \
+            dist/bootstrap.sh.sig \
+            --generate-notes

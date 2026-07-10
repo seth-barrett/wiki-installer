@@ -1,0 +1,48 @@
+name: Verify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: "3.13"
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes shellcheck
+      - name: Lint shell scripts
+        run: shellcheck bootstrap.sh install.sh scripts/package_release.sh tests/*.sh
+      - name: Parse shell scripts
+        run: bash -n bootstrap.sh install.sh scripts/package_release.sh tests/*.sh
+      - name: Run Python tests
+        run: python3 -m unittest discover -s tests -v
+      - name: Validate the starter template
+        run: python3 scripts/validate_vault.py template
+      - name: Run installer behavior tests
+        run: bash tests/test_installer.sh
+      - name: Run release bootstrap tests
+        run: bash tests/test_release.sh
+      - name: Build and verify an ephemeral signed release payload
+        run: |
+          signing_key="$RUNNER_TEMP/wiki-installer-test-private.pem"
+          public_key="$RUNNER_TEMP/wiki-installer-test-public.pem"
+          openssl genpkey -algorithm Ed25519 -out "$signing_key"
+          openssl pkey -in "$signing_key" -pubout -out "$public_key"
+          bash scripts/package_release.sh \
+            --output dist \
+            --signing-key "$signing_key" \
+            --public-key "$public_key"
+          openssl pkeyutl -verify -pubin -inkey "$public_key" -rawin \
+            -in dist/release-manifest.json -sigfile dist/release-manifest.json.sig
+          tar -tzf "dist/wiki-installer-$(tr -d '[:space:]' < VERSION).tar.gz"

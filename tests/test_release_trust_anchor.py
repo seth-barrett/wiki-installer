@@ -47,6 +47,15 @@ class ReleaseTrustAnchorTests(unittest.TestCase):
         )
         self.assertIn("environment: release", workflow)
 
+    def test_release_workflow_dispatches_from_protected_main(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("workflow_dispatch:", workflow)
+        self.assertIn("release_tag:", workflow)
+        self.assertIn("RELEASE_TAG: ${{ inputs.release_tag }}", workflow)
+        self.assertNotIn('tags: ["v*"]', workflow)
+
     def test_gitignore_blocks_private_key_and_environment_files(self) -> None:
         ignore_rules = (ROOT / ".gitignore").read_text(encoding="utf-8")
         for rule in (".env", ".env.*", "*.pem", "*.key"):

@@ -25,10 +25,10 @@ my-wiki/
 
 ## Install
 
-After release `v0.1.0` is published, the pinned one-liner will verify the signed bootstrap **before** it executes it:
+After release `v0.1.1` is published, the pinned one-liner will verify the signed bootstrap **before** it executes it:
 
 ```bash
-(v=v0.1.0; d=$(mktemp -d); trap 'rm -rf "$d"' EXIT; k='LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVdZV0NUYzZYTlVXcWVyOWpCaVN1UzJhUnZMK25aeWdzWm8weStHMy9Pck09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo='; curl -fsSLo "$d/bootstrap.sh" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh" && curl -fsSLo "$d/bootstrap.sh.sig" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh.sig" && printf %s "$k" | openssl base64 -d -A > "$d/release-public-key.pem" && openssl pkeyutl -verify -pubin -inkey "$d/release-public-key.pem" -rawin -in "$d/bootstrap.sh" -sigfile "$d/bootstrap.sh.sig" && bash "$d/bootstrap.sh" --path "$HOME/llm-wiki" --agent auto --yes)
+(v=v0.1.1; d=$(mktemp -d); trap 'rm -rf "$d"' EXIT; k='LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVdZV0NUYzZYTlVXcWVyOWpCaVN1UzJhUnZMK25aeWdzWm8weStHMy9Pck09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo='; curl -fsSLo "$d/bootstrap.sh" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh" && curl -fsSLo "$d/bootstrap.sh.sig" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh.sig" && printf %s "$k" | openssl base64 -d -A > "$d/release-public-key.pem" && openssl pkeyutl -verify -pubin -inkey "$d/release-public-key.pem" -rawin -in "$d/bootstrap.sh" -sigfile "$d/bootstrap.sh.sig" && bash "$d/bootstrap.sh" --path "$HOME/llm-wiki" --agent auto --yes)
 ```
 
 The authenticated bootstrap verifies the signed release manifest, exact archive size, SHA-256, and tar-entry safety before extraction or installation. It is not `curl | bash`; that would execute the one file we need to authenticate.
@@ -99,7 +99,7 @@ bash scripts/package_release.sh --output "$work/dist" --signing-key "$work/priva
 4. Create a GitHub `release` environment with required reviewers and place `WIKI_INSTALLER_SIGNING_KEY` only in that environment. The release job will not access the key until the environment approves it; CI uses a throwaway key instead.
 5. Protect `main`, restrict tag creation to release maintainers, and use signed/protected `vX.Y.Z` tags. The workflow also rejects a tag unless it matches `VERSION` and the current `main` commit.
 6. Publish the key fingerprint through an independently controlled channel before announcing the repository. Confirm that fingerprint through that channel before asking others to run the one-liner.
-7. Create and push the matching `vX.Y.Z` tag only after approval. The tag-triggered workflow builds the checked release archive and publishes it.
+7. Create and push the matching immutable `vX.Y.Z` tag only after approval. Then dispatch the `Publish release` workflow from `main`, supplying that exact tag; it builds the checked release archive and publishes it.
 
 There is deliberately no in-place updater in v0.1. Re-run the installer only for a new, empty wiki; do not treat a personal knowledge base like a disposable config directory.
 

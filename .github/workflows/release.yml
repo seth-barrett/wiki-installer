@@ -1,8 +1,12 @@
 name: Publish release
 
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing immutable vX.Y.Z tag that points to this main commit
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -11,17 +15,20 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     environment: release
+    env:
+      RELEASE_TAG: ${{ inputs.release_tag }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: "3.13"
-      - name: Verify tag matches VERSION and current main
+      - name: Verify tag matches VERSION and this protected main commit
         run: |
           version=$(tr -d '[:space:]' < VERSION)
-          test "$GITHUB_REF_NAME" = "v$version"
-          git fetch --no-tags --depth=1 origin refs/heads/main:refs/remotes/origin/main
-          test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+          test "$RELEASE_TAG" = "v$version"
+          tag_commit=$(git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG^{}" | awk '{print $1}')
+          test -n "$tag_commit"
+          test "$tag_commit" = "$(git rev-parse HEAD)"
       - name: Parse scripts and validate template
         run: |
           bash -n bootstrap.sh install.sh scripts/package_release.sh tests/*.sh
@@ -49,7 +56,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
+          gh release create "$RELEASE_TAG" \
             dist/wiki-installer-*.tar.gz \
             dist/release-manifest.json \
             dist/release-manifest.json.sig \

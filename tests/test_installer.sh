@@ -31,6 +31,7 @@ vault="$TEMPORARY_DIRECTORY/wiki"
 
 assert_file "$vault/AGENTS.md"
 assert_file "$vault/README.md"
+assert_file "$vault/START_HERE.md"
 assert_file "$vault/raw/.gitkeep"
 assert_file "$vault/wiki/Index.md"
 assert_file "$vault/wiki/Log.md"

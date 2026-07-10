@@ -9,6 +9,7 @@ It gives an AI agent a disciplined knowledge workspace—not a magical RAG uploa
 ```text
 my-wiki/
 ├── AGENTS.md                       # governance and writing rules
+├── START_HERE.md                    # Obsidian, Windows/WSL2, and privacy setup
 ├── raw/                             # immutable source archive
 ├── wiki/                            # compiled, linked knowledge
 │   ├── Index.md                     # query routing
@@ -25,10 +26,26 @@ my-wiki/
 
 ## Install
 
-After release `v0.1.1` is published, the pinned one-liner will verify the signed bootstrap **before** it executes it:
+### Windows: use WSL2, not PowerShell or Git Bash
+
+The installer uses Linux filesystem safety primitives, so Windows users must run it in Ubuntu under WSL2. In an elevated PowerShell window:
+
+```powershell
+wsl --install -d Ubuntu
+```
+
+After creating the Ubuntu user, open **Ubuntu** and install the prerequisites:
 
 ```bash
-(v=v0.1.1; d=$(mktemp -d); trap 'rm -rf "$d"' EXIT; k='LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVdZV0NUYzZYTlVXcWVyOWpCaVN1UzJhUnZMK25aeWdzWm8weStHMy9Pck09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo='; curl -fsSLo "$d/bootstrap.sh" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh" && curl -fsSLo "$d/bootstrap.sh.sig" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh.sig" && printf %s "$k" | openssl base64 -d -A > "$d/release-public-key.pem" && openssl pkeyutl -verify -pubin -inkey "$d/release-public-key.pem" -rawin -in "$d/bootstrap.sh" -sigfile "$d/bootstrap.sh.sig" && bash "$d/bootstrap.sh" --path "$HOME/llm-wiki" --agent auto --yes)
+sudo apt update && sudo apt install -y python3 curl openssl tar gzip
+```
+
+Run the signed command below **inside Ubuntu**, leaving the default destination at `~/llm-wiki` rather than `/mnt/c/...`. Then install [Obsidian](https://obsidian.md/download) in Windows and use **Open folder as vault** with `\\wsl.localhost\Ubuntu\home\<linux-user>\llm-wiki`. If that alias does not resolve, use `\\wsl$\Ubuntu\home\<linux-user>\llm-wiki` instead. The installed vault repeats these steps in `START_HERE.md`.
+
+After release `v0.1.2` is published, the pinned one-liner will verify the signed bootstrap **before** it executes it:
+
+```bash
+(v=v0.1.2; d=$(mktemp -d); trap 'rm -rf "$d"' EXIT; k='LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVdZV0NUYzZYTlVXcWVyOWpCaVN1UzJhUnZMK25aeWdzWm8weStHMy9Pck09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo='; curl -fsSLo "$d/bootstrap.sh" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh" && curl -fsSLo "$d/bootstrap.sh.sig" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh.sig" && printf %s "$k" | openssl base64 -d -A > "$d/release-public-key.pem" && openssl pkeyutl -verify -pubin -inkey "$d/release-public-key.pem" -rawin -in "$d/bootstrap.sh" -sigfile "$d/bootstrap.sh.sig" && bash "$d/bootstrap.sh" --path "$HOME/llm-wiki" --agent auto --yes)
 ```
 
 The authenticated bootstrap verifies the signed release manifest, exact archive size, SHA-256, and tar-entry safety before extraction or installation. It is not `curl | bash`; that would execute the one file we need to authenticate.
@@ -50,7 +67,7 @@ bash install.sh --path "$HOME/llm-wiki" --agent auto
 - Uses no network access after the release payload is verified.
 - Does not initialize a Git repository inside your knowledge vault.
 
-Supported platform in v0.1: Linux with Bash and an OpenSSL build that supports Ed25519. Prerequisites: Python 3, `curl`, `openssl`, `tar`, and `gzip`.
+Supported platform in v0.1.2: Linux with Bash, including Windows through WSL2, and an OpenSSL build that supports Ed25519. Prerequisites: Python 3, `curl`, `openssl`, `tar`, and `gzip`. Native Windows PowerShell, CMD, Git Bash, and `/mnt/c` destinations are intentionally unsupported.
 
 ## Use the wiki
 

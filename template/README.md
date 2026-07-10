@@ -1,25 +1,22 @@
 # My LLM Wiki
 
-A personal knowledge base maintained by you and your AI agent.
+A personal knowledge base maintained by you and whichever AI agent you choose.
 
 ## Start here
 
-Read `START_HERE.md` first. It covers Obsidian, Windows/WSL2 setup, agent prerequisites, privacy, and the exact folder-opening path.
+Read `START_HERE.md` first. It explains native Windows/macOS/Linux setup, Obsidian, privacy, and how to use this folder with Claude Code, Codex, Hermes, or another harness.
 
 1. Put source material in `raw/`. Keep it immutable after capture.
 2. Start your agent from this folder so it can read `AGENTS.md`.
 3. Ask the agent to summarize, connect, or update the compiled pages in `wiki/`.
 4. Browse `wiki/Index.md` when you need a route into the knowledge base.
 
-## Hermes
+## Use any agent harness
 
-From this folder, run:
-
-```bash
-hermes
-```
-
-Then ask Hermes to read and follow `AGENTS.md` before working in the wiki. The optional `Agent-Adapters/Hermes.md` file contains the same workspace-safe guidance.
+- **Codex:** start it in this folder; it can follow `AGENTS.md`.
+- **Claude Code:** start it in this folder; `CLAUDE.md` points it to the shared `AGENTS.md` contract.
+- **Hermes:** start it in this folder on Linux, macOS, or WSL. Its optional workspace adapter is not required for the vault to work.
+- **Anything else:** tell it: “Read `START_HERE.md` and `AGENTS.md`, then follow those rules before editing.”
 
 ## Safety baseline
 

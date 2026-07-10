@@ -1,73 +1,69 @@
-# Wiki Installer
+# LLM Wiki Starter
 
-A safe starter for a compounding, agent-maintained Markdown wiki.
+A portable, agent-maintained Markdown wiki. It is a normal folder first—not a vendor-specific harness, a surprise automation stack, or an opaque RAG bucket.
 
-It gives an AI agent a disciplined knowledge workspace—not a magical RAG upload bucket and not a surprise automation stack.
-
-## What it creates
+## What the starter ZIP contains
 
 ```text
 my-wiki/
-├── AGENTS.md                       # governance and writing rules
-├── START_HERE.md                    # Obsidian, Windows/WSL2, and privacy setup
-├── raw/                             # immutable source archive
-├── wiki/                            # compiled, linked knowledge
-│   ├── Index.md                     # query routing
-│   ├── Log.md                       # meaningful-change log
+├── AGENTS.md                       # shared operating rules for every harness
+├── CLAUDE.md                       # Claude Code pointer to the shared rules
+├── START_HERE.md                   # Obsidian, agent, privacy, and platform setup
+├── raw/                            # immutable source archive
+├── wiki/                           # compiled, linked knowledge
+│   ├── Index.md                    # query routing
+│   ├── Log.md                      # meaningful-change log
 │   ├── Concepts/
 │   ├── Topics/
 │   ├── Code-Patterns/
 │   ├── Comparisons/
 │   └── Temporal-Trackers/
-├── Agent-Skills/llm-wiki/SKILL.md  # portable workflow skill
-├── Agent-Adapters/Hermes.md         # only when Hermes is selected
-└── scripts/validate_vault.py        # local structure/link validator
+├── Agent-Skills/llm-wiki/SKILL.md # optional portable workflow reference
+└── scripts/validate_vault.py       # local structure/link validator
 ```
 
-## Install
+## Default: download the cross-platform starter ZIP
 
-### Windows: use WSL2, not PowerShell or Git Bash
+After `v0.1.3` is published, download [llm-wiki-starter-0.1.3.zip](https://github.com/seth-barrett/wiki-installer/releases/download/v0.1.3/llm-wiki-starter-0.1.3.zip), extract it anywhere you keep personal files, and open that extracted folder as an Obsidian vault.
 
-The installer uses Linux filesystem safety primitives, so Windows users must run it in Ubuntu under WSL2. In an elevated PowerShell window:
+This is the normal path for Windows, macOS, and Linux. It executes no downloaded code, needs no public key, and does not require WSL or Hermes.
 
-```powershell
-wsl --install -d Ubuntu
-```
+### Windows
 
-After creating the Ubuntu user, open **Ubuntu** and install the prerequisites:
+1. Extract the ZIP under `Documents` or another private folder.
+2. Install [Obsidian](https://obsidian.md/download), then select **Open folder as vault** and choose the extracted folder.
+3. Start whichever agent harness you use from that folder.
+
+### Choose any agent harness
+
+- **Codex:** start it in the vault root; it can follow `AGENTS.md`.
+- **Claude Code:** start it in the vault root; `CLAUDE.md` points it to the shared rules in `AGENTS.md`.
+- **Hermes:** use it on Linux, macOS, or WSL. On Windows, Hermes can use a vault stored in your Windows home folder through `/mnt/c/...`.
+- **Anything else:** begin with: “Read `START_HERE.md` and `AGENTS.md`, then follow those rules before editing this vault.”
+
+The starter never installs or configures an agent. `Agent-Skills/` is optional reference material, not a global skill installation.
+
+## Optional signed installer: Linux or WSL only
+
+The project also offers a signed Bash installer for people who want a new private vault created automatically on a Linux filesystem. It is optional convenience—not a prerequisite for the vault, Obsidian, Claude Code, Codex, or other harnesses.
+
+The installer uses Linux `renameat2` to prevent an attacker from redirecting the target directory. Because it downloads and executes code, its bootstrap embeds a public key and verifies the signed release manifest before extraction. The public key protects that executable path only.
+
+Run this only in Linux or WSL, not Windows PowerShell, CMD, Git Bash, macOS, or a `/mnt/c/...` target:
 
 ```bash
-sudo apt update && sudo apt install -y python3 curl openssl tar gzip
+(v=v0.1.3; d=$(mktemp -d); trap 'rm -rf "$d"' EXIT; k='LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVdZV0NUYzZYTlVXcWVyOWpCaVN1UzJhUnZMK25aeWdzWm8weStHMy9Pck09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo='; curl -fsSLo "$d/bootstrap.sh" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh" && curl -fsSLo "$d/bootstrap.sh.sig" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh.sig" && printf %s "$k" | openssl base64 -d -A > "$d/release-public-key.pem" && openssl pkeyutl -verify -pubin -inkey "$d/release-public-key.pem" -rawin -in "$d/bootstrap.sh" -sigfile "$d/bootstrap.sh.sig" && bash "$d/bootstrap.sh" --path "$HOME/llm-wiki" --yes)
 ```
 
-Run the signed command below **inside Ubuntu**, leaving the default destination at `~/llm-wiki` rather than `/mnt/c/...`. Then install [Obsidian](https://obsidian.md/download) in Windows and use **Open folder as vault** with `\\wsl.localhost\Ubuntu\home\<linux-user>\llm-wiki`. If that alias does not resolve, use `\\wsl$\Ubuntu\home\<linux-user>\llm-wiki` instead. The installed vault repeats these steps in `START_HERE.md`.
-
-After release `v0.1.3` is published, the pinned one-liner will verify the signed bootstrap **before** it executes it:
-
-```bash
-(v=v0.1.3; d=$(mktemp -d); trap 'rm -rf "$d"' EXIT; k='LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVdZV0NUYzZYTlVXcWVyOWpCaVN1UzJhUnZMK25aeWdzWm8weStHMy9Pck09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo='; curl -fsSLo "$d/bootstrap.sh" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh" && curl -fsSLo "$d/bootstrap.sh.sig" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh.sig" && printf %s "$k" | openssl base64 -d -A > "$d/release-public-key.pem" && openssl pkeyutl -verify -pubin -inkey "$d/release-public-key.pem" -rawin -in "$d/bootstrap.sh" -sigfile "$d/bootstrap.sh.sig" && bash "$d/bootstrap.sh" --path "$HOME/llm-wiki" --agent auto --yes)
-```
-
-The authenticated bootstrap verifies the signed release manifest, exact archive size, SHA-256, and tar-entry safety before extraction or installation. It is not `curl | bash`; that would execute the one file we need to authenticate.
-
-Prefer inspecting remote code before execution? Use the local/manual route:
-
-```bash
-git clone https://github.com/seth-barrett/wiki-installer.git
-cd wiki-installer
-bash install.sh --path "$HOME/llm-wiki" --agent auto
-```
+The authenticated bootstrap verifies the signed release manifest, exact archive size, SHA-256, and tar-entry safety before extraction or installation. It is not `curl | bash`; that would execute the one file we need to authenticate. The optional `--agent hermes` flag only adds a workspace-local Hermes note; it never configures Hermes globally.
 
 ## Safety behavior
 
-- Refuses to write to any existing destination, the home/current directory, or a destination symlink.
-- Stages and validates the full workspace before one same-filesystem move; the created root is `0700` and its files are `0600`.
-- Does not modify `~/.hermes`, agent profiles, credentials, models, tools, services, webhooks, cron jobs, or databases.
-- Creates a workspace-local Hermes adapter only when `--agent hermes` or `--agent auto` detects Hermes.
-- Uses no network access after the release payload is verified.
-- Does not initialize a Git repository inside your knowledge vault.
-
-Supported platform in v0.1.3: Linux with Bash, including Windows through WSL2, and an OpenSSL build that supports Ed25519. Prerequisites: Python 3, `curl`, `openssl`, `tar`, and `gzip`. Native Windows PowerShell, CMD, Git Bash, and `/mnt/c` destinations are intentionally unsupported.
+- The starter ZIP is ordinary Markdown plus a local validator. It does not execute code or alter system configuration.
+- The optional installer refuses existing destinations, home/current directories, and symlink destinations.
+- The optional installer stages and validates the full workspace before one same-filesystem move; the created root is `0700` and its files are `0600`.
+- Nothing modifies agent profiles, credentials, models, tools, services, webhooks, cron jobs, or databases.
+- Nothing initializes Git inside your knowledge vault.
 
 ## Use the wiki
 
@@ -78,15 +74,7 @@ Supported platform in v0.1.3: Linux with Bash, including Windows through WSL2, a
 5. Validate structural changes:
 
 ```bash
-cd "$HOME/llm-wiki"
 python3 scripts/validate_vault.py .
-```
-
-With Hermes:
-
-```bash
-cd "$HOME/llm-wiki"
-hermes
 ```
 
 ## Local development
@@ -97,7 +85,7 @@ bash tests/test_installer.sh
 bash tests/test_release.sh
 ```
 
-The test suite generates ephemeral Ed25519 keys; it never needs the real release-signing key. To inspect a locally signed artifact, create a throwaway key and output directory:
+The test suite generates ephemeral Ed25519 keys; it never needs the real release-signing key. To inspect a locally signed installer artifact, create a throwaway key and output directory:
 
 ```bash
 work=$(mktemp -d)
@@ -106,7 +94,7 @@ openssl pkey -in "$work/private.pem" -pubout -out "$work/public.pem"
 bash scripts/package_release.sh --output "$work/dist" --signing-key "$work/private.pem" --public-key "$work/public.pem"
 ```
 
-`tests/test_release.sh` performs an offline bootstrap against a locally built release, then verifies that a tampered archive is rejected before the destination exists.
+`tests/test_release.sh` verifies both artifacts: the plain cross-platform ZIP contents and an offline authenticated bootstrap whose tampered archive is rejected before the destination exists.
 
 ## Release process
 
@@ -115,23 +103,22 @@ bash scripts/package_release.sh --output "$work/dist" --signing-key "$work/priva
 3. Complete the public-release audit: secrets, identity, private paths, personal workflow, licenses, and intended IP disclosure.
 4. Create a GitHub `release` environment with required reviewers and place `WIKI_INSTALLER_SIGNING_KEY` only in that environment. The release job will not access the key until the environment approves it; CI uses a throwaway key instead.
 5. Require the `test` check on `main`, block force-pushes and branch deletion, and keep `vX.Y.Z` tags immutable after creation. The workflow rejects a tag unless it matches `VERSION` and the dispatched `main` commit.
-6. Publish the key fingerprint through an independently controlled channel before announcing the repository. Confirm that fingerprint through that channel before asking others to run the one-liner.
-7. Create and push the matching immutable `vX.Y.Z` tag only after approval. Then dispatch the `Publish release` workflow from `main`, supplying that exact tag; it builds the checked release archive and publishes it.
+6. Publish the key fingerprint through an independently controlled channel before announcing the signed installer. Confirm that fingerprint through that channel before asking others to run the installer command.
+7. Create and push the matching immutable `vX.Y.Z` tag only after approval. Then dispatch the `Publish release` workflow from `main`, supplying that exact tag; it builds and publishes both the starter ZIP and the signed installer assets.
 
-There is deliberately no in-place updater in v0.1. Re-run the installer only for a new, empty wiki; do not treat a personal knowledge base like a disposable config directory.
+There is deliberately no in-place updater. Re-run the optional installer only for a new, empty wiki; do not treat a personal knowledge base like a disposable config directory.
 
-## First-use trust and key rotation
+## Installer first-use trust and key rotation
 
-The one-liner contains the release public key and verifies the downloaded bootstrap before executing it. The current key fingerprint is:
+Only the optional one-line installer uses the release public key. Its current fingerprint is:
 
 ```text
 SHA-256: 5120dc21bb493cc6a1b69eb345df226772d152e19d12a6059a43993766f32ad0
 ```
 
-On a first visit, the README and that key both arrive from the same repository. That is **trust on first use (TOFU)**: it detects a later release-asset substitution only after the user has independently retained or verified the key; it cannot independently authenticate a compromised repository on the first visit. Confirm the fingerprint through the separately controlled [public key-fingerprint Gist](https://gist.github.com/seth-barrett/07ade6203f159f095a7b6d9c0aa32177) before installation.
+On a first visit, the README and key both arrive from the same repository. That is **trust on first use (TOFU)**: it detects a later release-asset substitution only after the user has independently retained or verified the key; it cannot independently authenticate a compromised repository on the first visit. Confirm the fingerprint through the separately controlled [public key-fingerprint Gist](https://gist.github.com/seth-barrett/07ade6203f159f095a7b6d9c0aa32177) before using the signed installer.
 
 A key rotation must be announced through that independent channel with both old and new fingerprints. The maintainer should publish one final release signed by the old key, then require users to re-verify the new key before using a bootstrap that embeds it.
-
 
 ## License
 

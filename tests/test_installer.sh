@@ -46,6 +46,10 @@ if compgen -G "$TEMPORARY_DIRECTORY/.wiki-installer-stage.*" >/dev/null; then
 fi
 python3 "$vault/scripts/validate_vault.py" "$vault"
 
+default_agent="$TEMPORARY_DIRECTORY/default-agent"
+"$REPO_ROOT/install.sh" --source "$REPO_ROOT" --path "$default_agent" --yes
+assert_not_exists "$default_agent/Agent-Adapters"
+
 if "$REPO_ROOT/install.sh" --source "$REPO_ROOT" --path "$vault" --agent hermes --yes; then
   fail "installer accepted an existing vault"
 fi

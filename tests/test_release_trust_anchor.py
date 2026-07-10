@@ -47,7 +47,7 @@ class ReleaseTrustAnchorTests(unittest.TestCase):
         )
         self.assertIn("environment: release", workflow)
 
-    def test_release_workflow_dispatches_from_protected_main(self) -> None:
+    def test_release_workflow_dispatches_from_main_with_explicit_tag(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(
             encoding="utf-8"
         )
@@ -55,6 +55,16 @@ class ReleaseTrustAnchorTests(unittest.TestCase):
         self.assertIn("release_tag:", workflow)
         self.assertIn("RELEASE_TAG: ${{ inputs.release_tag }}", workflow)
         self.assertNotIn('tags: ["v*"]', workflow)
+        self.assertNotIn("protected main commit", workflow)
+
+    def test_security_policy_uses_enabled_private_reporting(self) -> None:
+        security_policy = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "Use the repository's **Security** tab and select **Report a vulnerability**.",
+            security_policy,
+        )
+        self.assertNotIn("once it is published", security_policy)
 
     def test_gitignore_blocks_private_key_and_environment_files(self) -> None:
         ignore_rules = (ROOT / ".gitignore").read_text(encoding="utf-8")

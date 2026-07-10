@@ -4,7 +4,7 @@
 
 Report vulnerabilities in the installer, bootstrap, release packaging, validator, or repository configuration.
 
-Do **not** open a public issue for a suspected vulnerability that could cause arbitrary writes, checksum bypass, credential exposure, or unsafe execution. Use GitHub's private security-advisory reporting for this repository once it is published, or contact the maintainer privately through the repository profile.
+Do **not** open a public issue for a suspected vulnerability that could cause arbitrary writes, checksum bypass, credential exposure, or unsafe execution. Use the repository's **Security** tab and select **Report a vulnerability**. Include enough detail to reproduce the issue without publishing exploit material.
 
 ## Supported versions
 

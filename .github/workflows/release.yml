@@ -22,7 +22,7 @@ jobs:
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: "3.13"
-      - name: Verify tag matches VERSION and this protected main commit
+      - name: Verify tag matches VERSION and this main commit
         run: |
           version=$(tr -d '[:space:]' < VERSION)
           test "$RELEASE_TAG" = "v$version"

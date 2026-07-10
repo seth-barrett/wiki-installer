@@ -42,10 +42,10 @@ sudo apt update && sudo apt install -y python3 curl openssl tar gzip
 
 Run the signed command below **inside Ubuntu**, leaving the default destination at `~/llm-wiki` rather than `/mnt/c/...`. Then install [Obsidian](https://obsidian.md/download) in Windows and use **Open folder as vault** with `\\wsl.localhost\Ubuntu\home\<linux-user>\llm-wiki`. If that alias does not resolve, use `\\wsl$\Ubuntu\home\<linux-user>\llm-wiki` instead. The installed vault repeats these steps in `START_HERE.md`.
 
-After release `v0.1.2` is published, the pinned one-liner will verify the signed bootstrap **before** it executes it:
+After release `v0.1.3` is published, the pinned one-liner will verify the signed bootstrap **before** it executes it:
 
 ```bash
-(v=v0.1.2; d=$(mktemp -d); trap 'rm -rf "$d"' EXIT; k='LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVdZV0NUYzZYTlVXcWVyOWpCaVN1UzJhUnZMK25aeWdzWm8weStHMy9Pck09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo='; curl -fsSLo "$d/bootstrap.sh" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh" && curl -fsSLo "$d/bootstrap.sh.sig" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh.sig" && printf %s "$k" | openssl base64 -d -A > "$d/release-public-key.pem" && openssl pkeyutl -verify -pubin -inkey "$d/release-public-key.pem" -rawin -in "$d/bootstrap.sh" -sigfile "$d/bootstrap.sh.sig" && bash "$d/bootstrap.sh" --path "$HOME/llm-wiki" --agent auto --yes)
+(v=v0.1.3; d=$(mktemp -d); trap 'rm -rf "$d"' EXIT; k='LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVdZV0NUYzZYTlVXcWVyOWpCaVN1UzJhUnZMK25aeWdzWm8weStHMy9Pck09Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo='; curl -fsSLo "$d/bootstrap.sh" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh" && curl -fsSLo "$d/bootstrap.sh.sig" "https://github.com/seth-barrett/wiki-installer/releases/download/$v/bootstrap.sh.sig" && printf %s "$k" | openssl base64 -d -A > "$d/release-public-key.pem" && openssl pkeyutl -verify -pubin -inkey "$d/release-public-key.pem" -rawin -in "$d/bootstrap.sh" -sigfile "$d/bootstrap.sh.sig" && bash "$d/bootstrap.sh" --path "$HOME/llm-wiki" --agent auto --yes)
 ```
 
 The authenticated bootstrap verifies the signed release manifest, exact archive size, SHA-256, and tar-entry safety before extraction or installation. It is not `curl | bash`; that would execute the one file we need to authenticate.
@@ -67,7 +67,7 @@ bash install.sh --path "$HOME/llm-wiki" --agent auto
 - Uses no network access after the release payload is verified.
 - Does not initialize a Git repository inside your knowledge vault.
 
-Supported platform in v0.1.2: Linux with Bash, including Windows through WSL2, and an OpenSSL build that supports Ed25519. Prerequisites: Python 3, `curl`, `openssl`, `tar`, and `gzip`. Native Windows PowerShell, CMD, Git Bash, and `/mnt/c` destinations are intentionally unsupported.
+Supported platform in v0.1.3: Linux with Bash, including Windows through WSL2, and an OpenSSL build that supports Ed25519. Prerequisites: Python 3, `curl`, `openssl`, `tar`, and `gzip`. Native Windows PowerShell, CMD, Git Bash, and `/mnt/c` destinations are intentionally unsupported.
 
 ## Use the wiki
 
@@ -114,7 +114,7 @@ bash scripts/package_release.sh --output "$work/dist" --signing-key "$work/priva
 2. Run the full local verification suite.
 3. Complete the public-release audit: secrets, identity, private paths, personal workflow, licenses, and intended IP disclosure.
 4. Create a GitHub `release` environment with required reviewers and place `WIKI_INSTALLER_SIGNING_KEY` only in that environment. The release job will not access the key until the environment approves it; CI uses a throwaway key instead.
-5. Protect `main`, restrict tag creation to release maintainers, and use signed/protected `vX.Y.Z` tags. The workflow also rejects a tag unless it matches `VERSION` and the current `main` commit.
+5. Require the `test` check on `main`, block force-pushes and branch deletion, and keep `vX.Y.Z` tags immutable after creation. The workflow rejects a tag unless it matches `VERSION` and the dispatched `main` commit.
 6. Publish the key fingerprint through an independently controlled channel before announcing the repository. Confirm that fingerprint through that channel before asking others to run the one-liner.
 7. Create and push the matching immutable `vX.Y.Z` tag only after approval. Then dispatch the `Publish release` workflow from `main`, supplying that exact tag; it builds the checked release archive and publishes it.
 

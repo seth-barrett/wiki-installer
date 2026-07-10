@@ -111,7 +111,7 @@ The one-liner contains the release public key and verifies the downloaded bootst
 SHA-256: 5120dc21bb493cc6a1b69eb345df226772d152e19d12a6059a43993766f32ad0
 ```
 
-On a first visit, the README and that key both arrive from the same repository. That is **trust on first use (TOFU)**: it detects a later release-asset substitution only after the user has independently retained or verified the key; it cannot independently authenticate a compromised repository on the first visit. Confirm the fingerprint through a separately controlled maintainer channel before installation.
+On a first visit, the README and that key both arrive from the same repository. That is **trust on first use (TOFU)**: it detects a later release-asset substitution only after the user has independently retained or verified the key; it cannot independently authenticate a compromised repository on the first visit. Confirm the fingerprint through the separately controlled [public key-fingerprint Gist](https://gist.github.com/seth-barrett/07ade6203f159f095a7b6d9c0aa32177) before installation.
 
 A key rotation must be announced through that independent channel with both old and new fingerprints. The maintainer should publish one final release signed by the old key, then require users to re-verify the new key before using a bootstrap that embeds it.
 

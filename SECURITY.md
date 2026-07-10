@@ -13,7 +13,7 @@ Only the latest tagged release is supported.
 ## Security design
 
 - A pinned public key verifies the bootstrap before execution; the authenticated bootstrap verifies an Ed25519-signed release manifest, then exact archive size and SHA-256 before extraction.
-- The public key and one-liner are delivered together in the repository README on first use. This is TOFU, not an independent proof of publisher identity: users should compare `SHA-256: 5120dc21bb493cc6a1b69eb345df226772d152e19d12a6059a43993766f32ad0` with a separately controlled maintainer channel before installation.
+- The public key and one-liner are delivered together in the repository README on first use. This is TOFU, not an independent proof of publisher identity: users should compare `SHA-256: 5120dc21bb493cc6a1b69eb345df226772d152e19d12a6059a43993766f32ad0` with the separately controlled [public key-fingerprint Gist](https://gist.github.com/seth-barrett/07ade6203f159f095a7b6d9c0aa32177) before installation.
 - Key rotation requires an independent announcement of old and new fingerprints, plus a final old-key-signed release.
 - Archive entries are rejected before extraction when they use traversal, absolute paths, duplicate names, non-regular members, unsafe permissions, or an unexpected release root.
 - The installer rejects existing, home/current-directory, and symlink destinations; it validates an isolated staging tree before an atomic move into a new private workspace.

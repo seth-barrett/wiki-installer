@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-readonly PROJECT_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-readonly VERSION=$(tr -d '[:space:]' < "$PROJECT_ROOT/VERSION")
+PROJECT_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+readonly PROJECT_ROOT
+VERSION=$(tr -d '[:space:]' < "$PROJECT_ROOT/VERSION")
+readonly VERSION
 
 usage() {
   cat <<'USAGE'

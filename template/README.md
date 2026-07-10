@@ -4,6 +4,8 @@ A personal knowledge base maintained by you and your AI agent.
 
 ## Start here
 
+Read `START_HERE.md` first. It covers Obsidian, Windows/WSL2 setup, agent prerequisites, privacy, and the exact folder-opening path.
+
 1. Put source material in `raw/`. Keep it immutable after capture.
 2. Start your agent from this folder so it can read `AGENTS.md`.
 3. Ask the agent to summarize, connect, or update the compiled pages in `wiki/`.

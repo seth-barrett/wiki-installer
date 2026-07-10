@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # This value is intentionally pinned. Each vX.Y.Z tag ships a matching bootstrap.
-readonly VERSION="0.1.1"
+readonly VERSION="0.1.2"
 readonly DEFAULT_RELEASE_BASE_URL="https://github.com/seth-barrett/wiki-installer/releases/download/v$VERSION"
 
 usage() {

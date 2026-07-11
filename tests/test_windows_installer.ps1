@@ -91,7 +91,7 @@ try {
 
     $version = (Get-Content -LiteralPath (Join-Path $repositoryRoot "VERSION") -Raw).Trim()
     $readme = Get-Content -LiteralPath (Join-Path $repositoryRoot "README.md") -Raw
-    $commandMatch = [regex]::Match($readme, "(?ms)^```powershell\r?\n(?<command>.*?)\r?\n```")
+    $commandMatch = [regex]::Match($readme, '(?ms)^```powershell\r?\n(?<command>.*?)\r?\n```')
     Assert-True $commandMatch.Success "README did not contain a PowerShell setup command"
     $releaseCommand = $commandMatch.Groups["command"].Value.Replace("`$v='$version'", "`$v='test'")
     $readmeDestination = Join-Path ([Environment]::GetFolderPath("MyDocuments")) "llm-wiki"

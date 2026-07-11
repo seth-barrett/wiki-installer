@@ -61,14 +61,13 @@ class ValidateVaultTests(unittest.TestCase):
         self.assertFalse(result.valid)
         self.assertIn("Missing required file: START_HERE.md", result.issues)
 
-    def test_reports_a_missing_claude_instruction_pointer(self) -> None:
+    def test_allows_removing_the_optional_claude_instruction_pointer(self) -> None:
         root = self.create_valid_vault()
         (root / "CLAUDE.md").unlink()
 
         result = validate_vault(root)
 
-        self.assertFalse(result.valid)
-        self.assertIn("Missing required file: CLAUDE.md", result.issues)
+        self.assertTrue(result.valid, result.issues)
 
     def test_reports_a_broken_wikilink(self) -> None:
         root = self.create_valid_vault()

@@ -13,7 +13,7 @@ Create a new portable LLM-wiki workspace from a verified release payload.
 
 Options:
   --path PATH       New destination directory (default: $HOME/llm-wiki)
-  --agent AGENT     auto, hermes, or none (default: auto)
+  --agent AGENT     Optional adapter: auto, hermes, or none (default: none)
   --source PATH     Verified release payload directory (default: this script's directory)
   --yes             Skip the interactive creation confirmation
   --dry-run         Show the selected action without writing files
@@ -62,7 +62,7 @@ cleanup_stage() {
 
 destination="${HOME}/llm-wiki"
 source_directory="$SCRIPT_DIRECTORY"
-agent="auto"
+agent="none"
 yes=false
 dry_run=false
 path_provided=false

@@ -1,41 +1,33 @@
 # Start Here
 
-This folder is a private, Obsidian-compatible Markdown vault for you and your AI agent. The vault is plain files: Obsidian is optional, but it is the recommended desktop app for browsing and editing them.
+This is a plain Markdown folder. It works as an Obsidian vault and as a project folder for any AI-agent harness. You do not need WSL, Hermes, a public key, or an installer to use the vault itself.
 
 ## First five minutes
 
-1. Install [Obsidian](https://obsidian.md/download) if you want a desktop editor.
-2. In Obsidian, choose **Open folder as vault** and select this folder. Do not create a second vault inside it.
+1. Extract the `llm-wiki-starter-<version>.zip` release asset anywhere you normally keep personal files. On Windows, a folder under `Documents` is fine.
+2. Install [Obsidian](https://obsidian.md/download) if you want a desktop editor. In Obsidian, choose **Open folder as vault** and select this folder. Do not create a second vault inside it.
 3. Keep original sources in `raw/`. They are evidence; do not rewrite them after capture.
-4. Start your AI agent from this folder, then tell it to read `AGENTS.md` before it changes anything.
+4. Start your preferred agent in this folder, then tell it to read `AGENTS.md` before it changes anything.
 5. Use `wiki/Index.md` to find the right topic page, and review `wiki/Log.md` to see meaningful changes.
 
-## Windows users: run the installer in WSL2
+## Use any agent harness
 
-The installer and agent workflow are Linux-based. On Windows, use Ubuntu through WSL2 rather than PowerShell or Git Bash.
+- **Claude Code:** start it in this folder. `CLAUDE.md` directs it to the shared `AGENTS.md` contract.
+- **Codex:** start it in this folder and let it follow `AGENTS.md`.
+- **Hermes:** use it on Linux, macOS, or WSL. On Windows, Hermes can work from WSL against a vault stored in your Windows home folder, for example `/mnt/c/Users/<windows-user>/Documents/llm-wiki`.
+- **Another harness:** paste this at the start of a session:
 
-1. In an elevated PowerShell window, install WSL2 and Ubuntu:
+  ```text
+  Read START_HERE.md and AGENTS.md. Follow those rules before editing this vault.
+  ```
 
-   ```powershell
-   wsl --install -d Ubuntu
-   ```
+The vault is not tied to any one agent. The optional `Agent-Skills/llm-wiki/SKILL.md` is reference material, not a global installation or configuration requirement.
 
-   Restart if Windows requests it, then launch **Ubuntu** and create the Linux username/password.
-2. In the Ubuntu terminal, install the installer prerequisites:
+## Optional signed installer: Linux or WSL only
 
-   ```bash
-   sudo apt update && sudo apt install -y python3 curl openssl tar gzip
-   ```
+The project also provides an optional signed Bash installer for people who want a new private vault created automatically on a Linux filesystem. That installer uses a public key because it downloads and executes code; the plain starter ZIP does not execute anything and does not require key verification.
 
-3. Run the signed installer command from the project README **inside Ubuntu**. Keep the vault in your Linux home directory, for example `~/llm-wiki`; do **not** use `/mnt/c/...`. The installer’s atomic safety guarantee depends on the Linux filesystem.
-4. In Windows Obsidian, choose **Open folder as vault** and use this network path, replacing the placeholders:
-
-   ```text
-   \\wsl.localhost\Ubuntu\home\<linux-user>\llm-wiki
-   ```
-
-   If that alias does not resolve, use `\\wsl$\Ubuntu\home\<linux-user>\llm-wiki` instead. If your distribution has a different name, run `wsl -l -v` in PowerShell and substitute that name.
-5. Install and run your chosen agent inside Ubuntu from the vault directory. For Hermes, use the current [Hermes installation documentation](https://hermes-agent.nousresearch.com/docs), then run `cd ~/llm-wiki && hermes`.
+Do not use that installer from Windows PowerShell, CMD, or Git Bash. If you use it on Windows, run it inside WSL and install into the Linux home directory, such as `~/llm-wiki`, rather than `/mnt/c/...`.
 
 ## Privacy baseline
 

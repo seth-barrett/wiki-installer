@@ -8,7 +8,8 @@ This folder is a compounding knowledge base. Keep its source material, compiled 
 - `wiki/` is the compiled knowledge layer. Create or update Markdown here when knowledge becomes reusable.
 - `wiki/Index.md` is the starting point for broad questions and routing.
 - `wiki/Log.md` is the append-only audit trail for meaningful wiki changes.
-- `Agent-Skills/` contains portable workflow instructions. `Agent-Adapters/` contains optional, agent-specific launch guidance.
+- `AGENTS.md` is the cross-harness operating contract. `CLAUDE.md` only points Claude Code back to these shared rules.
+- `Agent-Skills/` contains optional portable workflow instructions. `Agent-Adapters/` is optional, agent-specific launch guidance; neither changes global agent configuration.
 
 ## Before editing
 

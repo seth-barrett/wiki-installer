@@ -29,6 +29,7 @@ class ReleaseTrustAnchorTests(unittest.TestCase):
         bootstrap = (ROOT / "bootstrap.sh").read_text(encoding="utf-8")
 
         self.assertRegex(bootstrap, rf'readonly VERSION="{re.escape(version)}"')
+
     def test_workflows_use_immutable_action_pins(self) -> None:
         expected_actions = {
             "actions/checkout": "9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0",
@@ -65,6 +66,18 @@ class ReleaseTrustAnchorTests(unittest.TestCase):
             security_policy,
         )
         self.assertNotIn("once it is published", security_policy)
+
+    def test_starter_is_harness_neutral(self) -> None:
+        template = ROOT / "template"
+        start_here = (template / "START_HERE.md").read_text(encoding="utf-8")
+        claude_instructions = (template / "CLAUDE.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn("Read and follow `AGENTS.md`", claude_instructions)
+        self.assertIn("Claude Code", start_here)
+        self.assertIn("Codex", start_here)
+        self.assertIn("llm-wiki-starter-", readme)
+        self.assertIn("Optional signed installer", readme)
 
     def test_gitignore_blocks_private_key_and_environment_files(self) -> None:
         ignore_rules = (ROOT / ".gitignore").read_text(encoding="utf-8")

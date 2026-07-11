@@ -58,6 +58,7 @@ jobs:
         run: |
           gh release create "$RELEASE_TAG" \
             dist/wiki-installer-*.tar.gz \
+            dist/llm-wiki-starter-*.zip \
             dist/release-manifest.json \
             dist/release-manifest.json.sig \
             dist/bootstrap.sh \

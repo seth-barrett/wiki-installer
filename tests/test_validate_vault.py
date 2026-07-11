@@ -26,6 +26,7 @@ class ValidateVaultTests(unittest.TestCase):
             (root / relative_path).mkdir(parents=True, exist_ok=True)
 
         (root / "AGENTS.md").write_text("# Wiki rules\n", encoding="utf-8")
+        (root / "CLAUDE.md").write_text("# Claude instructions\n", encoding="utf-8")
         (root / "START_HERE.md").write_text("# Start here\n", encoding="utf-8")
         (root / "wiki/Log.md").write_text("# Wiki log\n", encoding="utf-8")
         (root / "wiki/Topics/Example.md").write_text("# Example\n", encoding="utf-8")
@@ -59,6 +60,15 @@ class ValidateVaultTests(unittest.TestCase):
 
         self.assertFalse(result.valid)
         self.assertIn("Missing required file: START_HERE.md", result.issues)
+
+    def test_reports_a_missing_claude_instruction_pointer(self) -> None:
+        root = self.create_valid_vault()
+        (root / "CLAUDE.md").unlink()
+
+        result = validate_vault(root)
+
+        self.assertFalse(result.valid)
+        self.assertIn("Missing required file: CLAUDE.md", result.issues)
 
     def test_reports_a_broken_wikilink(self) -> None:
         root = self.create_valid_vault()

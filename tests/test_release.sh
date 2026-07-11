@@ -31,13 +31,55 @@ bash "$REPO_ROOT/scripts/package_release.sh" \
   --public-key "$public_key"
 
 archive="$dist/wiki-installer-$VERSION.tar.gz"
+starter_archive="$dist/llm-wiki-starter-$VERSION.zip"
 manifest="$dist/release-manifest.json"
 manifest_signature="$manifest.sig"
 bootstrap="$dist/bootstrap.sh"
 bootstrap_signature="$bootstrap.sig"
-for required_file in "$archive" "$manifest" "$manifest_signature" "$bootstrap" "$bootstrap_signature"; do
+for required_file in "$archive" "$starter_archive" "$manifest" "$manifest_signature" "$bootstrap" "$bootstrap_signature"; do
   assert_file "$required_file"
 done
+
+python3 - "$starter_archive" "$VERSION" <<'PY'
+import sys
+import zipfile
+from pathlib import Path
+
+archive = Path(sys.argv[1])
+version = sys.argv[2]
+root = f"llm-wiki-starter-{version}/"
+with zipfile.ZipFile(archive) as bundle:
+    names = set(bundle.namelist())
+required = {
+    f"{root}AGENTS.md",
+    f"{root}CLAUDE.md",
+    f"{root}START_HERE.md",
+    f"{root}README.md",
+    f"{root}raw/.gitkeep",
+    f"{root}scripts/validate_vault.py",
+    f"{root}Agent-Skills/llm-wiki/SKILL.md",
+}
+missing = required - names
+if missing:
+    raise SystemExit(f"starter ZIP is missing: {sorted(missing)}")
+if any(name.startswith(f"{root}Agent-Adapters/") for name in names):
+    raise SystemExit("starter ZIP must not select a harness-specific adapter")
+PY
+
+starter_extract="$TEMPORARY_DIRECTORY/starter-extract"
+python3 - "$starter_archive" "$starter_extract" <<'PY'
+import sys
+import zipfile
+from pathlib import Path
+
+archive = Path(sys.argv[1])
+destination = Path(sys.argv[2])
+with zipfile.ZipFile(archive) as bundle:
+    bundle.extractall(destination)
+PY
+starter_root="$starter_extract/llm-wiki-starter-$VERSION"
+python3 "$starter_root/scripts/validate_vault.py" "$starter_root"
+assert_not_exists "$starter_root/Agent-Adapters"
 
 openssl pkeyutl -verify -pubin -inkey "$public_key" -rawin \
   -in "$manifest" -sigfile "$manifest_signature"

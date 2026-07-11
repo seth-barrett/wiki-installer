@@ -46,3 +46,4 @@ jobs:
           openssl pkeyutl -verify -pubin -inkey "$public_key" -rawin \
             -in dist/release-manifest.json -sigfile dist/release-manifest.json.sig
           tar -tzf "dist/wiki-installer-$(tr -d '[:space:]' < VERSION).tar.gz"
+          test -f "dist/llm-wiki-starter-$(tr -d '[:space:]' < VERSION).zip"

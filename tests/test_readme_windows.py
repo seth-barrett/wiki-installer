@@ -31,6 +31,9 @@ class WindowsReadmeTests(unittest.TestCase):
         )
         self.assertIn("Invoke-WebRequest", readme)
         self.assertIn("ZipFile]::OpenRead", readme)
+        self.assertIn("$expectedSize=", readme)
+        self.assertRegex(readme, r"\$expectedSha256='[0-9a-f]{64}'")
+        self.assertIn("Get-FileHash -LiteralPath $z -Algorithm SHA256", readme)
         self.assertIn("unsafe ZIP member", readme)
         self.assertIn("duplicate ZIP entry", readme)
         self.assertNotIn("irm ", readme.lower())
@@ -40,8 +43,19 @@ class WindowsReadmeTests(unittest.TestCase):
         script = (ROOT / "scripts" / "install_windows.ps1").read_text(encoding="utf-8")
 
         self.assertIn("[string]$ArchivePath", script)
+        self.assertIn("[Int64]$ExpectedSize", script)
+        self.assertIn("[string]$ExpectedSha256", script)
+        self.assertIn("Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256", script)
         self.assertIn("[System.IO.Directory]::Move", script)
         self.assertIn("Destination must be new", script)
+
+    def test_windows_guidance_requires_human_review_of_agent_rules(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+
+        self.assertIn(
+            "Review `AGENTS.md` yourself before asking an agent to follow it.",
+            readme,
+        )
 
 
 if __name__ == "__main__":

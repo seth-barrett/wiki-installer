@@ -13,6 +13,7 @@ Only the latest tagged release is supported.
 ## Security design
 
 - A pinned public key verifies the bootstrap before execution; the authenticated bootstrap verifies an Ed25519-signed release manifest, then exact archive size and SHA-256 before extraction.
+- The no-execution ZIP validates archive structure and compares its bytes with the size and SHA-256 pinned in the README. That is integrity relative to the README copy the user chose, not independent publisher authentication: it does not authenticate the ZIP bytes in the default Windows flow. Review its agent instructions before asking an agent to follow them; users needing authenticated bytes should verify the signed release manifest and its SHA-256 descriptor.
 - The public key and one-liner are delivered together in the repository README on first use. This is TOFU, not an independent proof of publisher identity. A [public key-fingerprint Gist](https://gist.github.com/seth-barrett/07ade6203f159f095a7b6d9c0aa32177) under the same GitHub identity is a second reference copy, not an independent trust channel. Users who need first-use protection should obtain `SHA-256: 5120dc21bb493cc6a1b69eb345df226772d152e19d12a6059a43993766f32ad0` directly from the maintainer through a channel they already trust.
 - Key rotation requires an independent announcement of old and new fingerprints, plus a final old-key-signed release.
 - Archive entries are rejected before extraction when they use traversal, absolute paths, duplicate names, non-regular members, unsafe permissions, or an unexpected release root.

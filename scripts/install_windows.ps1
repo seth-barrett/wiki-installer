@@ -13,6 +13,14 @@ param(
     [string]$Destination,
 
     [Parameter(Mandatory = $true)]
+    [ValidateScript({ $_ -gt 0 })]
+    [Int64]$ExpectedSize,
+
+    [Parameter(Mandatory = $true)]
+    [ValidatePattern("^[A-Fa-f0-9]{64}$")]
+    [string]$ExpectedSha256,
+
+    [Parameter(Mandatory = $true)]
     [ValidateNotNullOrEmpty()]
     [string]$ExpectedRoot
 )
@@ -112,6 +120,16 @@ try {
             throw "Archive URI must use HTTPS"
         }
         Invoke-WebRequest -UseBasicParsing -Uri $ArchiveUri -OutFile $downloadPath -ErrorAction Stop
+    }
+
+    $actualSize = ([System.IO.FileInfo]$downloadPath).Length
+    if ($actualSize -ne $ExpectedSize) {
+        throw "Archive size did not match the expected value"
+    }
+
+    $actualSha256 = (Get-FileHash -LiteralPath $downloadPath -Algorithm SHA256).Hash
+    if (-not [string]::Equals($actualSha256, $ExpectedSha256, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw "Archive SHA-256 did not match the expected value"
     }
 
     Test-StarterArchive -ZipPath $downloadPath -RootName $ExpectedRoot

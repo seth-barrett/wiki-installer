@@ -46,8 +46,10 @@ try {
         $safeZip.Dispose()
     }
 
+    $expectedSize = (Get-Item -LiteralPath $archive).Length
+    $expectedSha256 = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash
     $destination = Join-Path $temporaryRoot "installed-wiki"
-    & $installer -ArchivePath $archive -Destination $destination -ExpectedRoot $starterRootName
+    & $installer -ArchivePath $archive -Destination $destination -ExpectedRoot $starterRootName -ExpectedSize $expectedSize -ExpectedSha256 $expectedSha256
     Assert-True (Test-Path -LiteralPath (Join-Path $destination "AGENTS.md") -PathType Leaf) "installer did not create the starter vault"
     Assert-True (-not (Get-ChildItem -LiteralPath $temporaryRoot -Force -Filter ".llm-wiki-stage-*")) "installer left a staging directory behind"
 
@@ -55,13 +57,51 @@ try {
     Set-Content -LiteralPath $sentinel -Value "preserve existing destination"
     $existingDestinationRejected = $false
     try {
-        & $installer -ArchivePath $archive -Destination $destination -ExpectedRoot $starterRootName
+        & $installer -ArchivePath $archive -Destination $destination -ExpectedRoot $starterRootName -ExpectedSize $expectedSize -ExpectedSha256 $expectedSha256
     }
     catch {
         $existingDestinationRejected = $true
     }
     Assert-True $existingDestinationRejected "installer accepted an existing destination"
     Assert-True (Test-Path -LiteralPath $sentinel -PathType Leaf) "installer modified an existing destination"
+
+    $tamperedArchive = Join-Path $temporaryRoot "tampered.zip"
+    [System.IO.File]::WriteAllBytes(
+        $tamperedArchive,
+        ([System.IO.File]::ReadAllBytes($archive) + [byte]0x00)
+    )
+    $tamperedDestination = Join-Path $temporaryRoot "tampered-destination"
+    $tamperedArchiveRejected = $false
+    try {
+        & $installer -ArchivePath $tamperedArchive -Destination $tamperedDestination -ExpectedRoot $starterRootName -ExpectedSize $expectedSize -ExpectedSha256 $expectedSha256
+    }
+    catch {
+        $tamperedArchiveRejected = $true
+    }
+    Assert-True $tamperedArchiveRejected "installer accepted a ZIP whose digest did not match"
+    Assert-True (-not (Test-Path -LiteralPath $tamperedDestination)) "tampered ZIP created a destination"
+
+    $wrongSizeDestination = Join-Path $temporaryRoot "wrong-size-destination"
+    $wrongSizeRejected = $false
+    try {
+        & $installer -ArchivePath $archive -Destination $wrongSizeDestination -ExpectedRoot $starterRootName -ExpectedSize ($expectedSize + 1) -ExpectedSha256 $expectedSha256
+    }
+    catch {
+        $wrongSizeRejected = $true
+    }
+    Assert-True $wrongSizeRejected "installer accepted an incorrect expected size"
+    Assert-True (-not (Test-Path -LiteralPath $wrongSizeDestination)) "wrong expected size created a destination"
+
+    $malformedDigestDestination = Join-Path $temporaryRoot "malformed-digest-destination"
+    $malformedDigestRejected = $false
+    try {
+        & $installer -ArchivePath $archive -Destination $malformedDigestDestination -ExpectedRoot $starterRootName -ExpectedSize $expectedSize -ExpectedSha256 "not-a-sha256"
+    }
+    catch {
+        $malformedDigestRejected = $true
+    }
+    Assert-True $malformedDigestRejected "installer accepted a malformed expected digest"
+    Assert-True (-not (Test-Path -LiteralPath $malformedDigestDestination)) "malformed digest created a destination"
 
     $unsafeArchive = Join-Path $temporaryRoot "unsafe.zip"
     $unsafeZip = [System.IO.Compression.ZipFile]::Open($unsafeArchive, [System.IO.Compression.ZipArchiveMode]::Create)
@@ -79,10 +119,12 @@ try {
         $unsafeZip.Dispose()
     }
 
+    $unsafeExpectedSize = (Get-Item -LiteralPath $unsafeArchive).Length
+    $unsafeExpectedSha256 = (Get-FileHash -LiteralPath $unsafeArchive -Algorithm SHA256).Hash
     $unsafeDestination = Join-Path $temporaryRoot "unsafe-destination"
     $unsafeArchiveRejected = $false
     try {
-        & $installer -ArchivePath $unsafeArchive -Destination $unsafeDestination -ExpectedRoot $starterRootName
+        & $installer -ArchivePath $unsafeArchive -Destination $unsafeDestination -ExpectedRoot $starterRootName -ExpectedSize $unsafeExpectedSize -ExpectedSha256 $unsafeExpectedSha256
     }
     catch {
         $unsafeArchiveRejected = $true
@@ -112,19 +154,48 @@ try {
         Copy-Item -LiteralPath $script:mockArchive -Destination $OutFile -ErrorAction Stop
     }
 
+    function Set-ReadmeArchivePins {
+        param(
+            [Parameter(Mandatory = $true)]
+            [string]$Command,
+
+            [Parameter(Mandatory = $true)]
+            [string]$ArchiveFixture
+        )
+
+        $sizeMatch = [regex]::Match($Command, '\$expectedSize=\d+')
+        $hashMatch = [regex]::Match($Command, '\$expectedSha256=''[0-9a-f]{64}''', [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+        Assert-True $sizeMatch.Success "README command did not contain an expected ZIP size"
+        Assert-True $hashMatch.Success "README command did not contain an expected ZIP SHA-256"
+
+        $expectedFixtureSize = (Get-Item -LiteralPath $ArchiveFixture).Length
+        $expectedFixtureSha256 = (Get-FileHash -LiteralPath $ArchiveFixture -Algorithm SHA256).Hash
+        return $Command.Replace($sizeMatch.Value, "`$expectedSize=$expectedFixtureSize").Replace($hashMatch.Value, "`$expectedSha256='$expectedFixtureSha256'")
+    }
+
+    $releaseCommand = Set-ReadmeArchivePins -Command $releaseCommand -ArchiveFixture $archive
+
     function Assert-ReadmeArchiveRejected {
         param(
             [Parameter(Mandatory = $true)]
             [string]$ArchiveFixture,
 
             [Parameter(Mandatory = $true)]
-            [string]$Message
+            [string]$Message,
+
+            [bool]$UseFixturePins = $true
         )
 
         $script:mockArchive = $ArchiveFixture
+        $command = if ($UseFixturePins) {
+            Set-ReadmeArchivePins -Command $releaseCommand -ArchiveFixture $ArchiveFixture
+        }
+        else {
+            $releaseCommand
+        }
         $rejected = $false
         try {
-            [ScriptBlock]::Create($releaseCommand).Invoke()
+            [ScriptBlock]::Create($command).Invoke()
         }
         catch {
             $rejected = $true
@@ -158,6 +229,7 @@ try {
     Assert-True $readmeExistingDestinationRejected "README command accepted an existing destination"
     Assert-True $readmeSentinelPreserved "README command modified an existing destination"
 
+    Assert-ReadmeArchiveRejected -ArchiveFixture $tamperedArchive -Message "README command accepted a ZIP whose digest did not match" -UseFixturePins $false
     Assert-ReadmeArchiveRejected -ArchiveFixture $unsafeArchive -Message "README command accepted a traversal ZIP entry"
 
     $duplicateArchive = Join-Path $temporaryRoot "duplicate.zip"

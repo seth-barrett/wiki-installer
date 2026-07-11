@@ -73,6 +73,7 @@ for required_path in \
   "skills/llm-wiki/SKILL.md" \
   "adapters/hermes/Hermes.md" \
   "scripts/create_starter_zip.py" \
+  "scripts/release_archive.py" \
   "scripts/validate_vault.py" \
   "scripts/atomic_install.py" \
   "install.sh" \
@@ -80,6 +81,20 @@ for required_path in \
   "scripts/release_manifest.py"; do
   [[ -e "$PROJECT_ROOT/$required_path" ]] || die "Missing release input: $required_path"
 done
+
+python3 "$PROJECT_ROOT/scripts/release_archive.py" preflight \
+  "$PROJECT_ROOT/template" \
+  "$PROJECT_ROOT/skills" \
+  "$PROJECT_ROOT/adapters" \
+  "$PROJECT_ROOT/scripts/create_starter_zip.py" \
+  "$PROJECT_ROOT/scripts/release_archive.py" \
+  "$PROJECT_ROOT/scripts/validate_vault.py" \
+  "$PROJECT_ROOT/scripts/atomic_install.py" \
+  "$PROJECT_ROOT/scripts/release_manifest.py" \
+  "$PROJECT_ROOT/install.sh" \
+  "$PROJECT_ROOT/bootstrap.sh" \
+  "$PROJECT_ROOT/VERSION" \
+  || die "Release inputs contain a symlink or unsafe filesystem entry"
 
 mkdir -p "$output_directory"
 temporary_directory=$(mktemp -d "${TMPDIR:-/tmp}/wiki-installer-package.XXXXXX")
@@ -104,6 +119,9 @@ cp "$PROJECT_ROOT/scripts/atomic_install.py" "$payload_directory/scripts/atomic_
 cp "$PROJECT_ROOT/install.sh" "$payload_directory/install.sh"
 cp "$PROJECT_ROOT/VERSION" "$payload_directory/VERSION"
 
+python3 "$PROJECT_ROOT/scripts/release_archive.py" preflight "$payload_directory" \
+  || die "Staged Linux payload contains a symlink or unsafe filesystem entry"
+
 mkdir -p "$starter_directory"
 cp -R "$PROJECT_ROOT/template/." "$starter_directory/"
 mkdir -p "$starter_directory/scripts"
@@ -126,6 +144,11 @@ tar \
   -C "$temporary_directory" \
   -czf "$archive" \
   "$payload_name"
+
+python3 "$PROJECT_ROOT/scripts/release_archive.py" verify-tar \
+  --archive "$archive" \
+  --root "$payload_name" \
+  || die "Built release archive violates the safe payload contract"
 
 python3 "$PROJECT_ROOT/scripts/release_manifest.py" \
   --archive "$archive" \

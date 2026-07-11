@@ -9,25 +9,36 @@ on:
         type: string
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   windows-starter:
+    if: github.ref == 'refs/heads/main'
     runs-on: windows-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: refs/heads/main
       - name: Run native PowerShell starter setup tests
         shell: powershell
         run: ./tests/test_windows_installer.ps1
 
   publish:
+    if: github.ref == 'refs/heads/main'
     needs: windows-starter
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     environment: release
     env:
       RELEASE_TAG: ${{ inputs.release_tag }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          ref: refs/heads/main
+          fetch-depth: 0
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
         with:
           python-version: "3.13"
@@ -35,9 +46,12 @@ jobs:
         run: |
           version=$(tr -d '[:space:]' < VERSION)
           test "$RELEASE_TAG" = "v$version"
+          main_commit=$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')
+          test -n "$main_commit"
+          test "$main_commit" = "$(git rev-parse HEAD)"
           tag_commit=$(git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG^{}" | awk '{print $1}')
           test -n "$tag_commit"
-          test "$tag_commit" = "$(git rev-parse HEAD)"
+          test "$tag_commit" = "$main_commit"
       - name: Parse scripts and validate template
         run: |
           bash -n bootstrap.sh install.sh scripts/package_release.sh tests/*.sh

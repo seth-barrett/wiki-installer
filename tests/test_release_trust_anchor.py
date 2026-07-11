@@ -11,6 +11,19 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class ReleaseTrustAnchorTests(unittest.TestCase):
+    @staticmethod
+    def _release_job_blocks(workflow: str) -> dict[str, str]:
+        jobs_section = workflow.split("\njobs:\n", maxsplit=1)[1]
+        job_headers = list(re.finditer(r"(?m)^  (?P<name>[a-z][a-z-]*):\n", jobs_section))
+        return {
+            header.group("name"): jobs_section[
+                header.start() : job_headers[index + 1].start()
+                if index + 1 < len(job_headers)
+                else len(jobs_section)
+            ]
+            for index, header in enumerate(job_headers)
+        }
+
     def test_bootstrap_embeds_the_committed_public_key(self) -> None:
         public_key = (ROOT / "keys/release-public-key.pem").read_text(encoding="utf-8")
         bootstrap = (ROOT / "bootstrap.sh").read_text(encoding="utf-8")
@@ -66,11 +79,70 @@ class ReleaseTrustAnchorTests(unittest.TestCase):
         self.assertNotIn('tags: ["v*"]', workflow)
         self.assertNotIn("protected main commit", workflow)
 
+    def test_release_workflow_uses_trusted_main_and_least_privilege(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(
+            encoding="utf-8"
+        )
+        jobs = self._release_job_blocks(workflow)
+        self.assertEqual(set(jobs), {"windows-starter", "publish"})
+        windows_job = jobs["windows-starter"]
+        publish_job = jobs["publish"]
+
+        self.assertIn("permissions:\n  contents: read", workflow)
+        write_capable_jobs = [
+            name for name, job in jobs.items() if "      contents: write" in job
+        ]
+        self.assertEqual(write_capable_jobs, ["publish"])
+        self.assertIn("environment: release", publish_job)
+        self.assertIn("if: github.ref == 'refs/heads/main'", windows_job)
+        self.assertIn("permissions:\n      contents: read", windows_job)
+        self.assertIn("ref: refs/heads/main", windows_job)
+        self.assertNotIn("contents: write", windows_job)
+        self.assertIn("if: github.ref == 'refs/heads/main'", publish_job)
+        self.assertIn("permissions:\n      contents: write", publish_job)
+        self.assertIn("ref: refs/heads/main", publish_job)
+        self.assertEqual(workflow.count("ref: refs/heads/main"), 2)
+        self.assertIn(
+            "main_commit=$(git ls-remote --exit-code origin refs/heads/main | awk '{print $1}')",
+            publish_job,
+        )
+        self.assertIn('test "$main_commit" = "$(git rev-parse HEAD)"', publish_job)
+        self.assertIn(
+            'tag_commit=$(git ls-remote --exit-code --tags origin "refs/tags/$RELEASE_TAG^{}" | awk \'{print $1}\')',
+            publish_job,
+        )
+        self.assertIn('test "$tag_commit" = "$main_commit"', publish_job)
+
+    def test_package_release_verifies_the_built_tar_before_signing(self) -> None:
+        package_script = (ROOT / "scripts/package_release.sh").read_text(encoding="utf-8")
+
+        tar_creation = package_script.index("tar \\")
+        tar_verification = package_script.index("verify-tar")
+        manifest_creation = package_script.index(
+            'python3 "$PROJECT_ROOT/scripts/release_manifest.py"', tar_verification
+        )
+        self.assertLess(tar_creation, tar_verification)
+        self.assertLess(tar_verification, manifest_creation)
+        self.assertIn('--archive "$archive"', package_script[tar_verification:manifest_creation])
+        self.assertIn('--root "$payload_name"', package_script[tar_verification:manifest_creation])
+
+    def test_windows_documentation_states_its_non_signature_boundary(self) -> None:
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        windows_section = readme.split("## Optional: Linux and WSL installer", maxsplit=1)[0]
+
+        self.assertIn("does not verify the Ed25519 release signature", windows_section)
+        self.assertIn("not independent publisher authentication", windows_section)
+        self.assertNotIn("Add-Type -TypeDefinition", windows_section)
+
     def test_security_policy_uses_enabled_private_reporting(self) -> None:
         security_policy = (ROOT / "SECURITY.md").read_text(encoding="utf-8")
 
         self.assertIn(
             "Use the repository's **Security** tab and select **Report a vulnerability**.",
+            security_policy,
+        )
+        self.assertIn(
+            "does not authenticate the ZIP bytes in the default Windows flow",
             security_policy,
         )
         self.assertNotIn("once it is published", security_policy)

@@ -74,6 +74,27 @@ for key, archive_argument in (("archive", sys.argv[2]), ("starter_archive", sys.
         raise SystemExit(f"manifest {key} did not bind {archive.name}: {actual!r}")
 PY
 
+python3 - "$REPO_ROOT/README.md" "$starter_archive" "$VERSION" <<'PY'
+import hashlib
+import re
+import sys
+from pathlib import Path
+
+readme = Path(sys.argv[1]).read_text(encoding="utf-8")
+starter_archive = Path(sys.argv[2])
+version = re.escape(sys.argv[3])
+match = re.search(
+    rf"\$v='{version}';\$expectedSize=(\d+);\$expectedSha256='([0-9a-f]{{64}})'",
+    readme,
+)
+if not match:
+    raise SystemExit("README does not pin the starter ZIP size and SHA-256")
+expected_size, expected_sha256 = match.groups()
+actual_sha256 = hashlib.sha256(starter_archive.read_bytes()).hexdigest()
+if int(expected_size) != starter_archive.stat().st_size or expected_sha256 != actual_sha256:
+    raise SystemExit("README starter ZIP pin does not match the built artifact")
+PY
+
 python3 - "$starter_archive" "$VERSION" <<'PY'
 import sys
 import zipfile
@@ -130,6 +151,34 @@ if bash "$symlink_source/scripts/package_release.sh" \
   fail "release packaging accepted a template symlink"
 fi
 assert_not_exists "$symlink_dist/llm-wiki-starter-$VERSION.zip"
+
+unsafe_payload_source="$TEMPORARY_DIRECTORY/unsafe-payload-source"
+mkdir -p "$unsafe_payload_source"
+cp -a "$REPO_ROOT/." "$unsafe_payload_source/"
+rm -rf "$unsafe_payload_source/.git"
+ln -s "$synthetic_secret" "$unsafe_payload_source/skills/synthetic-release-link.txt"
+unsafe_payload_dist="$TEMPORARY_DIRECTORY/unsafe-payload-dist"
+if bash "$unsafe_payload_source/scripts/package_release.sh" \
+  --output "$unsafe_payload_dist" \
+  --signing-key "$signing_key" \
+  --public-key "$public_key"; then
+  fail "release packaging accepted a symlink in skills"
+fi
+assert_not_exists "$unsafe_payload_dist/wiki-installer-$VERSION.tar.gz"
+
+unsafe_fifo_source="$TEMPORARY_DIRECTORY/unsafe-fifo-source"
+mkdir -p "$unsafe_fifo_source"
+cp -a "$REPO_ROOT/." "$unsafe_fifo_source/"
+rm -rf "$unsafe_fifo_source/.git"
+mkfifo "$unsafe_fifo_source/adapters/release-events.pipe"
+unsafe_fifo_dist="$TEMPORARY_DIRECTORY/unsafe-fifo-dist"
+if bash "$unsafe_fifo_source/scripts/package_release.sh" \
+  --output "$unsafe_fifo_dist" \
+  --signing-key "$signing_key" \
+  --public-key "$public_key"; then
+  fail "release packaging accepted a FIFO in adapters"
+fi
+assert_not_exists "$unsafe_fifo_dist/wiki-installer-$VERSION.tar.gz"
 
 openssl pkeyutl -verify -pubin -inkey "$public_key" -rawin \
   -in "$manifest" -sigfile "$manifest_signature"

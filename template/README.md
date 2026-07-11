@@ -4,7 +4,7 @@ A personal knowledge base maintained by you and whichever AI agent you choose.
 
 ## Start here
 
-Read `START_HERE.md` first. It explains native Windows/macOS/Linux setup, Obsidian, privacy, and how to use this folder with Claude Code, Codex, Hermes, or another harness.
+Read `START_HERE.md` first. It starts with native Windows and Obsidian setup, then explains privacy and how to use this folder with Claude Code, Codex, Hermes, or another harness.
 
 1. Put source material in `raw/`. Keep it immutable after capture.
 2. Start your agent from this folder so it can read `AGENTS.md`.

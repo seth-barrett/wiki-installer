@@ -12,7 +12,16 @@ permissions:
   contents: write
 
 jobs:
+  windows-starter:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - name: Run native PowerShell starter setup tests
+        shell: powershell
+        run: ./tests/test_windows_installer.ps1
+
   publish:
+    needs: windows-starter
     runs-on: ubuntu-latest
     environment: release
     env:

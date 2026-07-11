@@ -22,6 +22,7 @@ New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
 
 try {
     $starterRootName = "llm-wiki-starter-test"
+    Add-Type -AssemblyName System.IO.Compression
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = Join-Path $temporaryRoot "starter.zip"
     $safeZip = [System.IO.Compression.ZipFile]::Open($archive, [System.IO.Compression.ZipArchiveMode]::Create)

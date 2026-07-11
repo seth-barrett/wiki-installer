@@ -29,6 +29,7 @@ function Test-StarterArchive {
         [string]$RootName
     )
 
+    Add-Type -AssemblyName System.IO.Compression
     Add-Type -AssemblyName System.IO.Compression.FileSystem
     $archive = [System.IO.Compression.ZipFile]::OpenRead($ZipPath)
     $prefix = "$RootName/"

@@ -48,6 +48,14 @@ class ReleaseTrustAnchorTests(unittest.TestCase):
         )
         self.assertIn("environment: release", workflow)
 
+    def test_release_workflow_waits_for_the_windows_starter_gate(self) -> None:
+        workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn("windows-starter:", workflow)
+        self.assertIn("needs: windows-starter", workflow)
+
     def test_release_workflow_dispatches_from_main_with_explicit_tag(self) -> None:
         workflow = (ROOT / ".github" / "workflows" / "release.yml").read_text(
             encoding="utf-8"
@@ -77,7 +85,7 @@ class ReleaseTrustAnchorTests(unittest.TestCase):
         self.assertIn("Claude Code", start_here)
         self.assertIn("Codex", start_here)
         self.assertIn("llm-wiki-starter-", readme)
-        self.assertIn("Optional signed installer", readme)
+        self.assertIn("Optional: Linux and WSL installer", readme)
 
     def test_gitignore_blocks_private_key_and_environment_files(self) -> None:
         ignore_rules = (ROOT / ".gitignore").read_text(encoding="utf-8")

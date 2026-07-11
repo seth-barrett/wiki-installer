@@ -47,3 +47,11 @@ jobs:
             -in dist/release-manifest.json -sigfile dist/release-manifest.json.sig
           tar -tzf "dist/wiki-installer-$(tr -d '[:space:]' < VERSION).tar.gz"
           test -f "dist/llm-wiki-starter-$(tr -d '[:space:]' < VERSION).zip"
+
+  windows-starter:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+      - name: Run native PowerShell starter setup tests
+        shell: powershell
+        run: ./tests/test_windows_installer.ps1

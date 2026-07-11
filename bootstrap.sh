@@ -97,17 +97,26 @@ expected_version = sys.argv[2]
 expected_name = sys.argv[3]
 try:
     data = json.loads(manifest_path.read_text(encoding='utf-8'))
-    if set(data) != {'archive', 'version'} or data['version'] != expected_version:
-        raise ValueError
+    if set(data) != {'archive', 'starter_archive', 'version'} or data['version'] != expected_version:
+        raise ValueError('unexpected manifest schema')
     archive = data['archive']
+    starter_archive = data['starter_archive']
     if set(archive) != {'name', 'sha256', 'size'}:
-        raise ValueError
+        raise ValueError('unexpected archive schema')
+    if set(starter_archive) != {'name', 'sha256', 'size'}:
+        raise ValueError('unexpected starter archive schema')
     if archive['name'] != expected_name:
-        raise ValueError
+        raise ValueError('unexpected archive name')
+    if starter_archive['name'] != f'llm-wiki-starter-{expected_version}.zip':
+        raise ValueError('unexpected starter archive name')
     if not isinstance(archive['size'], int) or archive['size'] <= 0:
-        raise ValueError
+        raise ValueError('invalid archive size')
+    if not isinstance(starter_archive['size'], int) or starter_archive['size'] <= 0:
+        raise ValueError('invalid starter archive size')
     if not isinstance(archive['sha256'], str) or not re.fullmatch(r'[0-9a-f]{64}', archive['sha256']):
-        raise ValueError
+        raise ValueError('invalid archive SHA-256')
+    if not isinstance(starter_archive['sha256'], str) or not re.fullmatch(r'[0-9a-f]{64}', starter_archive['sha256']):
+        raise ValueError('invalid starter archive SHA-256')
 except (OSError, ValueError, TypeError, json.JSONDecodeError):
     raise SystemExit(1)
 print(f"{archive['size']} {archive['sha256']}")

@@ -72,6 +72,7 @@ for required_path in \
   "template/CLAUDE.md" \
   "skills/llm-wiki/SKILL.md" \
   "adapters/hermes/Hermes.md" \
+  "scripts/create_starter_zip.py" \
   "scripts/validate_vault.py" \
   "scripts/atomic_install.py" \
   "install.sh" \
@@ -110,33 +111,9 @@ cp "$PROJECT_ROOT/scripts/validate_vault.py" "$starter_directory/scripts/validat
 mkdir -p "$starter_directory/Agent-Skills/llm-wiki"
 cp "$PROJECT_ROOT/skills/llm-wiki/SKILL.md" "$starter_directory/Agent-Skills/llm-wiki/SKILL.md"
 
-python3 - "$starter_directory" "$starter_archive" <<'PY'
-import sys
-import zipfile
-from pathlib import Path
-
-source = Path(sys.argv[1])
-archive = Path(sys.argv[2])
-timestamp = (1980, 1, 1, 0, 0, 0)
-with zipfile.ZipFile(
-    archive, mode="w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
-) as bundle:
-    for path in sorted(source.rglob("*")):
-        relative = path.relative_to(source).as_posix()
-        name = f"{source.name}/{relative}"
-        if path.is_dir():
-            info = zipfile.ZipInfo(f"{name}/", date_time=timestamp)
-            info.create_system = 3
-            info.external_attr = (0o40700 << 16) | 0x10
-            info.compress_type = zipfile.ZIP_DEFLATED
-            bundle.writestr(info, b"")
-        elif path.is_file():
-            info = zipfile.ZipInfo(name, date_time=timestamp)
-            info.create_system = 3
-            info.external_attr = 0o100600 << 16
-            info.compress_type = zipfile.ZIP_DEFLATED
-            bundle.writestr(info, path.read_bytes())
-PY
+python3 "$PROJECT_ROOT/scripts/create_starter_zip.py" \
+  --source "$starter_directory" \
+  --archive "$starter_archive"
 
 # Release archives contain only owner-readable files and directories.
 tar \
@@ -152,6 +129,7 @@ tar \
 
 python3 "$PROJECT_ROOT/scripts/release_manifest.py" \
   --archive "$archive" \
+  --starter-archive "$starter_archive" \
   --version "$VERSION" \
   --output "$manifest"
 cp "$PROJECT_ROOT/bootstrap.sh" "$bootstrap"

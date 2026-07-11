@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a canonical, signed-release manifest for one installer archive."""
+"""Create a canonical, signed-release manifest for release artifacts."""
 
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ def sha256(path: Path) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--archive", required=True, type=Path)
+    parser.add_argument("--starter-archive", required=True, type=Path)
     parser.add_argument("--version", required=True)
     parser.add_argument("--output", required=True, type=Path)
     arguments = parser.parse_args(argv)
@@ -35,11 +36,23 @@ def main(argv: list[str] | None = None) -> int:
     if not archive.is_file() or archive.name != expected_name:
         parser.error(f"--archive must be an existing {expected_name} file")
 
+    starter_archive = arguments.starter_archive.resolve()
+    expected_starter_name = f"llm-wiki-starter-{arguments.version}.zip"
+    if not starter_archive.is_file() or starter_archive.name != expected_starter_name:
+        parser.error(
+            f"--starter-archive must be an existing {expected_starter_name} file"
+        )
+
     manifest = {
         "archive": {
             "name": archive.name,
             "sha256": sha256(archive),
             "size": archive.stat().st_size,
+        },
+        "starter_archive": {
+            "name": starter_archive.name,
+            "sha256": sha256(starter_archive),
+            "size": starter_archive.stat().st_size,
         },
         "version": arguments.version,
     }

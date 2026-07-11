@@ -1,11 +1,11 @@
 # Start Here
 
-This is a plain Markdown folder. It works as an Obsidian vault and as a project folder for any AI-agent harness. You do not need WSL, Hermes, a public key, or an installer to use the vault itself.
+This is a plain Markdown folder. It works as an Obsidian vault and as a project folder for any AI-agent harness. You do not need WSL, Hermes, signature verification, or an installer to use the vault itself.
 
 ## First five minutes
 
 1. Extract the `llm-wiki-starter-<version>.zip` release asset anywhere you normally keep personal files. On Windows, a folder under `Documents` is fine.
-2. Install [Obsidian](https://obsidian.md/download) if you want a desktop editor. In Obsidian, choose **Open folder as vault** and select this folder. Do not create a second vault inside it.
+2. Install [Obsidian](https://obsidian.md/download) if you want a desktop editor. In Obsidian, choose **Open folder as vault** and select the inner `llm-wiki-starter-<version>` folder. Do not create a second vault inside it.
 3. Keep original sources in `raw/`. They are evidence; do not rewrite them after capture.
 4. Start your preferred agent in this folder, then tell it to read `AGENTS.md` before it changes anything.
 5. Use `wiki/Index.md` to find the right topic page, and review `wiki/Log.md` to see meaningful changes.
@@ -25,7 +25,7 @@ The vault is not tied to any one agent. The optional `Agent-Skills/llm-wiki/SKIL
 
 ## Optional signed installer: Linux or WSL only
 
-The project also provides an optional signed Bash installer for people who want a new private vault created automatically on a Linux filesystem. That installer uses a public key because it downloads and executes code; the plain starter ZIP does not execute anything and does not require key verification.
+The project also provides an optional signed Bash installer for people who want a new private vault created automatically on a Linux filesystem. That installer uses a public key because it downloads and executes code. The plain starter ZIP does not execute anything; its exact filename, size, and SHA-256 are also bound by the optional signed release manifest if you want to verify provenance.
 
 Do not use that installer from Windows PowerShell, CMD, or Git Bash. If you use it on Windows, run it inside WSL and install into the Linux home directory, such as `~/llm-wiki`, rather than `/mnt/c/...`.
 

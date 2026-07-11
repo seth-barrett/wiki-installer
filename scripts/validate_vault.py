@@ -19,7 +19,6 @@ REQUIRED_DIRECTORIES = (
 )
 REQUIRED_FILES = (
     "AGENTS.md",
-    "CLAUDE.md",
     "START_HERE.md",
     "wiki/Index.md",
     "wiki/Log.md",

@@ -24,14 +24,14 @@ my-wiki/
 
 ## Default: download the cross-platform starter ZIP
 
-After `v0.1.3` is published, download [llm-wiki-starter-0.1.3.zip](https://github.com/seth-barrett/wiki-installer/releases/download/v0.1.3/llm-wiki-starter-0.1.3.zip), extract it anywhere you keep personal files, and open that extracted folder as an Obsidian vault.
+After `v0.1.3` is published, download [llm-wiki-starter-0.1.3.zip](https://github.com/seth-barrett/wiki-installer/releases/download/v0.1.3/llm-wiki-starter-0.1.3.zip), extract it anywhere you keep personal files, and open the inner `llm-wiki-starter-0.1.3` folder as an Obsidian vault.
 
-This is the normal path for Windows, macOS, and Linux. It executes no downloaded code, needs no public key, and does not require WSL or Hermes.
+This is the normal path for Windows, macOS, and Linux. It executes no downloaded code, uses no public key by default, and does not require WSL or Hermes.
 
 ### Windows
 
 1. Extract the ZIP under `Documents` or another private folder.
-2. Install [Obsidian](https://obsidian.md/download), then select **Open folder as vault** and choose the extracted folder.
+2. Install [Obsidian](https://obsidian.md/download), then select **Open folder as vault** and choose the inner `llm-wiki-starter-0.1.3` folder, not its parent.
 3. Start whichever agent harness you use from that folder.
 
 ### Choose any agent harness
@@ -43,11 +43,15 @@ This is the normal path for Windows, macOS, and Linux. It executes no downloaded
 
 The starter never installs or configures an agent. `Agent-Skills/` is optional reference material, not a global skill installation.
 
+### Optional ZIP provenance verification
+
+Routine use only needs the ZIP. For a higher trust bar, the release’s signed `release-manifest.json` also binds `starter_archive` to the ZIP’s exact filename, size, and SHA-256. Verify that manifest with the published Ed25519 key, then compare its `starter_archive.sha256` with your downloaded file (`Get-FileHash` in PowerShell or `sha256sum` on Unix). This is optional because opening the ZIP does not execute code; it is available when you want authenticity beyond normal GitHub transport/account trust.
+
 ## Optional signed installer: Linux or WSL only
 
 The project also offers a signed Bash installer for people who want a new private vault created automatically on a Linux filesystem. It is optional convenience—not a prerequisite for the vault, Obsidian, Claude Code, Codex, or other harnesses.
 
-The installer uses Linux `renameat2` to prevent an attacker from redirecting the target directory. Because it downloads and executes code, its bootstrap embeds a public key and verifies the signed release manifest before extraction. The public key protects that executable path only.
+The installer uses Linux `renameat2` to prevent an attacker from redirecting the target directory. Because it downloads and executes code, its bootstrap embeds a public key and verifies the signed release manifest before extraction. The same manifest also optionally authenticates the starter ZIP; the public key is never required to simply use the folder.
 
 Run this only in Linux or WSL, not Windows PowerShell, CMD, Git Bash, macOS, or a `/mnt/c/...` target:
 

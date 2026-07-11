@@ -19,6 +19,20 @@ assert_not_exists() {
   [[ ! -e "$1" ]] || fail "expected path to be absent: $1"
 }
 
+create_minimal_starter_archive() {
+  local archive_path=$1
+  python3 - "$archive_path" "$VERSION" <<'PY'
+import sys
+import zipfile
+from pathlib import Path
+
+archive = Path(sys.argv[1])
+version = sys.argv[2]
+with zipfile.ZipFile(archive, mode="w", compression=zipfile.ZIP_DEFLATED) as bundle:
+    bundle.writestr(f"llm-wiki-starter-{version}/README.md", "# Starter\n")
+PY
+}
+
 signing_key="$TEMPORARY_DIRECTORY/release-private.pem"
 public_key="$TEMPORARY_DIRECTORY/release-public.pem"
 openssl genpkey -algorithm Ed25519 -out "$signing_key"
@@ -39,6 +53,26 @@ bootstrap_signature="$bootstrap.sig"
 for required_file in "$archive" "$starter_archive" "$manifest" "$manifest_signature" "$bootstrap" "$bootstrap_signature"; do
   assert_file "$required_file"
 done
+
+python3 - "$manifest" "$archive" "$starter_archive" <<'PY'
+import hashlib
+import json
+import sys
+from pathlib import Path
+
+manifest_path = Path(sys.argv[1])
+manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+for key, archive_argument in (("archive", sys.argv[2]), ("starter_archive", sys.argv[3])):
+    archive = Path(archive_argument)
+    expected = {
+        "name": archive.name,
+        "sha256": hashlib.sha256(archive.read_bytes()).hexdigest(),
+        "size": archive.stat().st_size,
+    }
+    actual = manifest.get(key)
+    if actual != expected:
+        raise SystemExit(f"manifest {key} did not bind {archive.name}: {actual!r}")
+PY
 
 python3 - "$starter_archive" "$VERSION" <<'PY'
 import sys
@@ -80,6 +114,22 @@ PY
 starter_root="$starter_extract/llm-wiki-starter-$VERSION"
 python3 "$starter_root/scripts/validate_vault.py" "$starter_root"
 assert_not_exists "$starter_root/Agent-Adapters"
+
+symlink_source="$TEMPORARY_DIRECTORY/symlink-source"
+mkdir -p "$symlink_source"
+cp -a "$REPO_ROOT/." "$symlink_source/"
+rm -rf "$symlink_source/.git"
+synthetic_secret="$TEMPORARY_DIRECTORY/synthetic-release-secret.txt"
+printf 'not for the release\n' > "$synthetic_secret"
+ln -s "$synthetic_secret" "$symlink_source/template/synthetic-secret-link.txt"
+symlink_dist="$TEMPORARY_DIRECTORY/symlink-dist"
+if bash "$symlink_source/scripts/package_release.sh" \
+  --output "$symlink_dist" \
+  --signing-key "$signing_key" \
+  --public-key "$public_key"; then
+  fail "release packaging accepted a template symlink"
+fi
+assert_not_exists "$symlink_dist/llm-wiki-starter-$VERSION.zip"
 
 openssl pkeyutl -verify -pubin -inkey "$public_key" -rawin \
   -in "$manifest" -sigfile "$manifest_signature"
@@ -138,6 +188,8 @@ assert_not_exists "$untrusted_source_destination"
 
 unsafe_archive="$TEMPORARY_DIRECTORY/unsafe-entries"
 mkdir -p "$unsafe_archive"
+unsafe_starter_archive="$unsafe_archive/llm-wiki-starter-$VERSION.zip"
+create_minimal_starter_archive "$unsafe_starter_archive"
 python3 - "$unsafe_archive/wiki-installer-$VERSION.tar.gz" "$VERSION" <<'PY'
 import io
 import sys
@@ -167,6 +219,7 @@ with tarfile.open(archive_path, mode="w:gz") as archive:
 PY
 python3 "$REPO_ROOT/scripts/release_manifest.py" \
   --archive "$unsafe_archive/wiki-installer-$VERSION.tar.gz" \
+  --starter-archive "$unsafe_starter_archive" \
   --version "$VERSION" \
   --output "$unsafe_archive/release-manifest.json"
 openssl pkeyutl -sign -inkey "$signing_key" -rawin \
@@ -184,6 +237,8 @@ assert_not_exists "$unsafe_entries_destination"
 
 unsafe_link_archive="$TEMPORARY_DIRECTORY/unsafe-link"
 mkdir -p "$unsafe_link_archive"
+unsafe_link_starter_archive="$unsafe_link_archive/llm-wiki-starter-$VERSION.zip"
+create_minimal_starter_archive "$unsafe_link_starter_archive"
 python3 - "$unsafe_link_archive/wiki-installer-$VERSION.tar.gz" "$VERSION" <<'PY'
 import io
 import sys
@@ -213,6 +268,7 @@ with tarfile.open(archive_path, mode="w:gz") as archive:
 PY
 python3 "$REPO_ROOT/scripts/release_manifest.py" \
   --archive "$unsafe_link_archive/wiki-installer-$VERSION.tar.gz" \
+  --starter-archive "$unsafe_link_starter_archive" \
   --version "$VERSION" \
   --output "$unsafe_link_archive/release-manifest.json"
 openssl pkeyutl -sign -inkey "$signing_key" -rawin \

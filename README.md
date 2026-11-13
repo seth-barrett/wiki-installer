@@ -2,6 +2,32 @@
 
 A normal Markdown knowledge base you can open in Obsidian and work on with Codex, Claude Code, or any other capable agent. No vendor lock-in, database, or required automation.
 
+## What it does
+
+You drop a source into `raw/`. Your agent turns it into linked, cited pages in `wiki/`. The source is never rewritten, and every change is logged.
+
+**In:** one messy note.
+
+```text
+- rule we agreed: never rebase a branch someone else has pulled. rebase rewrites commits = new hashes
+- merge keeps both histories + adds a merge commit. safe on shared branches. downside: history gets noisy
+- if you must force push your own branch: --force-with-lease not --force
+```
+
+**Out:** a comparison page and a concept page that link to each other, plus an index entry and a log entry.
+
+```text
+wiki/
+├── Comparisons/Rebase-vs-Merge.md   # the rule, a comparison table, open questions
+├── Concepts/Linear-History.md       # reusable concept, links back to the comparison
+├── Index.md                         # two new routes
+└── Log.md                           # dated record of what changed
+```
+
+See the full input and output in [`examples/rebase-vs-merge`](examples/rebase-vs-merge).
+
+The starter is the folder structure, the agent rules and a validator. It does not run anything in the background: you ask your agent to ingest, and it follows the rules.
+
 ## Windows (recommended)
 
 Open **Windows PowerShell** (not Command Prompt), paste this one line, and press Enter. It downloads the `v0.1.5` starter ZIP, extracts it, and creates `Documents\llm-wiki`. It refuses to touch that destination if it already exists.

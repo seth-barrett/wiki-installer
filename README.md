@@ -4,6 +4,8 @@ A normal Markdown knowledge base you can open in Obsidian and work on with Codex
 
 ## What it does
 
+![Terminal demo: install the starter, drop a note into raw/, and see the linked wiki pages an agent wrote](docs/demo.gif)
+
 You drop a source into `raw/`. Your agent turns it into linked, cited pages in `wiki/`. The source is never rewritten, and every change is logged.
 
 **In:** one messy note.
